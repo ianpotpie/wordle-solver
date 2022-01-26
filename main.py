@@ -82,6 +82,27 @@ def prob_position_match(word: str, positional_freqs: list[dict[str, float]]) -> 
     return 1 - p
 
 
+def score_word(word: str, letter_freqs: dict[str, float], positional_freqs: list[dict[str, float]]) -> float:
+    """
+    Calculates the probability that the word will either match a find a new letter put a known letter in the correct
+    position.
+    :param word: the word to be checked
+    :param letter_freqs: a dictionary mapping letters to their frequencies
+    :param positional_freqs: a list of dictionaries mapping letters to their frequencies
+    :return: a probability
+    """
+    seen = []
+    p = 1
+    for i, char in enumerate(word):
+        if letter_freqs[char] == 1.0:
+            if positional_freqs[i][char] < 1.0:
+                p *= 1 - positional_freqs[i][char]
+        elif char not in seen:
+            p *= 1 - letter_freqs[char]
+            seen.append(char)
+    return 1 - p
+
+
 def get_file_words(filepath: str) -> set[str]:
     """
     Takes in a file with text, where each line of the file is a single word. The function produces the set of all words
@@ -104,6 +125,7 @@ def repl() -> None:
     state: str = "select-dict"
     word_size: int = 0
     guess: str = ""
+    n_guesses = 0
     possible_words: set[str] = set()
 
     try:
@@ -163,12 +185,13 @@ def repl() -> None:
                 if len(possible_words) == 0:
                     print("there are no viable words left to suggest")
                     state = "terminal"
+                if len(possible_words) == 1:
+                    print(f"the only word left is {possible_words.pop()}!")
+                    state = "terminal"
                 else:
                     best_words = []
                     for word in possible_words:
-                        p1 = prob_letter_match(word, letter_freqs)
-                        p2 = prob_position_match(word, positional_freqs)
-                        score = 1 - ((1 - p1) * (1 - p2))
+                        score = score_word(word, letter_freqs, positional_freqs)
                         best_words.append((score, word))
                         best_words.sort(reverse=True)
                         if len(best_words) > n_suggestions:
@@ -191,6 +214,7 @@ def repl() -> None:
                 except ValueError as e:
                     print(e)
                 else:
+                    n_guesses += 1
                     state = "evaluate-word"
 
             if state == "evaluate-word":
@@ -231,6 +255,7 @@ def repl() -> None:
                 _in = input("press ctrl-c to quit or enter \"r\" to restart: ")
                 if _in == "r":
                     state = "select-dict"
+                    n_guesses = 0
 
     except KeyboardInterrupt:
         print("\nExiting...")
