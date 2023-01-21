@@ -1,3 +1,7 @@
+import numpy as np
+
+def word2arr(word):
+
 def evaluate_guess(guess: str, goal: str) -> str:
     """
     Finds the evaluation of a guess word relative to goal word.
@@ -40,27 +44,36 @@ def restrict_word_bank(word_bank: set[str], guess: str, evaluation: str) -> set[
         if evaluate_guess(guess, word) == evaluation:
             new_word_bank.add(word)
 
-    return new_word_bank
+    return new_word_bankTrue
 
 
 class WordleGame:
-    def __init__(self, goal: str, word_bank: set[str], word_size: int = 5, max_guesses: int = 6,
-                 hard_mode: bool = True) -> None:
+    def __init__(self, goal_word, word_bank, word_length, max_guesses=6, hard_mode=False):
         """
         Simulates a wordle game.
-        :param goal: a goal word
+        :param goal_word: a goal word
         :param word_bank: a bank of possible guess words
-        :param word_size: the size of words in the game (can be none)
+        :param word_length: the length of words in the game (can be none)
         :param max_guesses: the maximum number of guesses (can be none)
         :param hard_mode: a boolean - hard mode limits guesses to those in the viable words
         """
-        self.goal: str = goal
-        self.word_bank: set[str] = word_bank
-        self.viable_goals: set[str] = word_bank.copy()
-        self.word_size: int = word_size
-        self.n_guesses: int = 0
-        self.max_guesses: int = max_guesses
-        self.hard_mode: bool = hard_mode
+        self.goal_word = goal_word
+        self.word_bank = set(word_bank)
+        self.viable_words = self.word_bank.copy()
+        self.word_length = word_length
+        self.n_guesses = 0
+        self.max_guesses = max_guesses
+        self.hard_mode = hard_mode
+
+    def evaluate_word(self, guess):
+        """
+
+
+        :param guess:
+        :return:
+        """
+
+
 
     def guess_word(self, guess: str) -> None:
         """
