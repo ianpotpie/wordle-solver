@@ -1,9 +1,23 @@
-from utilities_wordle import *
 from utilities_decision_tree import *
+from hueristics import *
 
 ENGLISH_FILE = "dictionaries/english-words.txt"
 GUESSES_FILE = "dictionaries/wordle-guesses.txt"
 ANSWERS_FILE = "dictionaries/wordle-answers.txt"
+
+
+def get_file_words(filepath: str) -> set[str]:
+    """
+    Takes in a file with text, where each line of the file is a single word. The function produces the set of all words
+    in the file.
+    :param filepath: a path to a file
+    :return: a set of words in the file
+    """
+    word_set = set()
+    with open(filepath, 'r') as f:
+        word_set.update([word.strip() for word in f.readlines()])
+        f.close()
+    return word_set
 
 
 def repl() -> None:
@@ -68,6 +82,10 @@ def repl() -> None:
                     state = "suggest-words"
 
             if state == "suggest-words":
+
+                letter_freqs = calc_letter_freqs(possible_words)
+                position_freqs = calc_positional_freqs(word_size, possible_words)
+
                 n_suggestions = 10
                 if len(possible_words) == 0:
                     print("there are no viable words left to suggest")
@@ -77,8 +95,9 @@ def repl() -> None:
                     state = "terminal"
                 else:
                     best_words = []
-                    for word in possible_words:
-                        score = get_optimal_expected_word(word, possible_words)
+                    for i, word in enumerate(possible_words):
+                        print(f"Evaluating... {i+1}/{len(possible_words)}", end='\r')
+                        score = word_entropy(word, possible_words)
                         best_words.append((score, word))
                         best_words.sort(reverse=True)
                         if len(best_words) > n_suggestions:

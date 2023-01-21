@@ -1,2 +1,2 @@
-# runs the python code in the terminal
+# runs the python src in the terminal
 python ./main.py
