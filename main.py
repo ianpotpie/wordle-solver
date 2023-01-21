@@ -1,120 +1,9 @@
+from utilities_wordle import *
+from utilities_decision_tree import *
+
 ENGLISH_FILE = "dictionaries/english-words.txt"
 GUESSES_FILE = "dictionaries/wordle-guesses.txt"
 ANSWERS_FILE = "dictionaries/wordle-answers.txt"
-
-
-def calc_letter_freqs(word_set: set[str]) -> dict[str, float]:
-    """
-    Iterates through a set of words and creates a dictionary of each letter to it's frequency in the set. The frequency
-    is based on the number of words in the set that contain the letter, thus words containing multiple instances of a
-    letter will affect the frequency the same as if they contained a single instance of the letter.
-    :param word_set: the set of words
-    :return: a dictionary of letters to their frequencies in the the set
-    """
-    letter_freqs = {}
-    for word in word_set:
-        seen = set()
-        for char in word:
-            if char not in seen:
-                seen.add(char)
-                if char in letter_freqs:
-                    letter_freqs[char] += 1
-                else:
-                    letter_freqs[char] = 1
-
-    for char in letter_freqs:
-        letter_freqs[char] /= len(word_set)
-
-    return letter_freqs
-
-
-def calc_positional_freqs(word_size: int, word_set: set[str]) -> list[dict[str, float]]:
-    """
-    Iterates through a set of (fixed size) words and creates a list of dictionaries. The dictionary in index "i" of the
-    list maps letters to their frequencies in position "i" of all the words in the set.
-    :param word_size: the size of each word in the set
-    :param word_set: the set of words
-    :return: the list of letter dictionary frequencies
-    """
-    positional_freqs = [{} for _ in range(word_size)]
-    for word in word_set:
-        for i, char in enumerate(word):
-            if char in positional_freqs[i]:
-                positional_freqs[i][char] += 1
-            else:
-                positional_freqs[i][char] = 1
-
-    for i in range(word_size):
-        for char in positional_freqs[i]:
-            positional_freqs[i][char] /= len(word_set)
-
-    return positional_freqs
-
-
-def prob_letter_match(word: str, letter_freqs: dict[str, float]) -> float:
-    """
-    Returns the probability that the word shares at least one letter with the goal word.
-    :param word: the word to be checked
-    :param letter_freqs: a dictionary mapping letters to their frequencies
-    :return: a probability
-    """
-    seen = []
-    p = 1
-    for i, char in enumerate(word):
-        if char not in seen:
-            if letter_freqs[char] != 1:
-                p *= 1 - letter_freqs[char]
-                seen.append(char)
-    return 1 - p
-
-
-def prob_position_match(word: str, positional_freqs: list[dict[str, float]]) -> float:
-    """
-    Returns the probability that the word has at least one matching position with the goal word.
-    :param word: the word to be checked
-    :param positional_freqs: a list of dictionaries mapping letters to their frequencies
-    :return: a probability
-    """
-    p = 1
-    for i, char in enumerate(word):
-        p *= 1 - positional_freqs[i][char]
-
-    return 1 - p
-
-
-def score_word(word: str, letter_freqs: dict[str, float], positional_freqs: list[dict[str, float]]) -> float:
-    """
-    Calculates the probability that the word will either match a find a new letter put a known letter in the correct
-    position.
-    :param word: the word to be checked
-    :param letter_freqs: a dictionary mapping letters to their frequencies
-    :param positional_freqs: a list of dictionaries mapping letters to their frequencies
-    :return: a probability
-    """
-    seen = []
-    p = 1
-    for i, char in enumerate(word):
-        if letter_freqs[char] == 1.0:
-            if positional_freqs[i][char] < 1.0:
-                p *= 1 - positional_freqs[i][char]
-        elif char not in seen:
-            p *= 1 - letter_freqs[char]
-            seen.append(char)
-    return 1 - p
-
-
-def get_file_words(filepath: str) -> set[str]:
-    """
-    Takes in a file with text, where each line of the file is a single word. The function produces the set of all words
-    in the file.
-    :param filepath: a path to a file
-    :return: a set of words in the file
-    """
-    word_set = set()
-    with open(filepath, 'r') as f:
-        word_set.update([word.strip() for word in f.readlines()])
-        f.close()
-    return word_set
 
 
 def repl() -> None:
@@ -179,8 +68,6 @@ def repl() -> None:
                     state = "suggest-words"
 
             if state == "suggest-words":
-                letter_freqs = calc_letter_freqs(possible_words)
-                positional_freqs = calc_positional_freqs(word_size, possible_words)
                 n_suggestions = 10
                 if len(possible_words) == 0:
                     print("there are no viable words left to suggest")
@@ -191,7 +78,7 @@ def repl() -> None:
                 else:
                     best_words = []
                     for word in possible_words:
-                        score = score_word(word, letter_freqs, positional_freqs)
+                        score = get_optimal_expected_word(word, possible_words)
                         best_words.append((score, word))
                         best_words.sort(reverse=True)
                         if len(best_words) > n_suggestions:
