@@ -3,3 +3,6 @@ data/hint_matrix.npy
 .ipynb_checkpoints/
 data/.ipynb_checkpoints/
 data/hint_array.npy
+data/*hint_array.npy
+data/guess-answer-hints.npy
+data/guess-guess-hints.npy
